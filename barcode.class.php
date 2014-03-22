@@ -72,8 +72,8 @@ class BarCode128 {
 		// default settings
 		$this->setBorderWidth(2);
 		$this->setBorderSpacing(10);
-		$this->setLineWidth(2);
-		$this->setTextSpacing(7);
+		$this->setLineWidth(1);
+		$this->setTextSpacing(5);
 		$this->setShowCode(true);
 		$this->setFontResize(false);
 		
