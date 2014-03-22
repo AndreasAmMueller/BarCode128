@@ -518,7 +518,7 @@ class BarCode128 {
 		} else {
 			$chk['data'][] = ($val * $count);
 		}
-		$chk['value'] = $val;
+		$chk['value'] = array_sum($chk['data']);
 		
 		$this->checksum = $chk;
 	}
