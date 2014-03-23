@@ -207,7 +207,7 @@ class BarCode128 {
 				if (!empty($this->getText())) {
 					$y1 = $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing() + $this->fontSize;
 				} else {
-					$y1 = $this->getBorderWith() + $this->getBorderSpacing();
+					$y1 = $this->getBorderWidth() + $this->getBorderSpacing();
 				}
 				// end
 				if ($this->getShowCode()) {
