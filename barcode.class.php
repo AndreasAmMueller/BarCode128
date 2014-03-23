@@ -39,6 +39,7 @@ class BarCode128 {
 	'value' => '',
 	'data'  => array()
 	);
+	private $text;
 	
 	private $dims = array(
 	'width'       => 0,
@@ -48,11 +49,13 @@ class BarCode128 {
 	'px_width'    => 0,
 	'txt_spacing' => 0
 	);
-	private $bbox;
+
+	private $bboxCode;
+	private $bboxText;
 	
-	private $font         = false;
-	private $fontSize     = 10;
-	private $calcFontSize = 10;
+	private $font;
+	private $fontSize;
+	private $calcFontSize;
 	
 	private $flags = array(
 	'fontResize' => false,
@@ -74,6 +77,7 @@ class BarCode128 {
 		$this->setBorderSpacing(10);
 		$this->setLineWidth(1);
 		$this->setTextSpacing(5);
+		$this->setText('');
 		$this->setShowCode(true);
 		$this->setFontResize(false);
 		
@@ -107,6 +111,10 @@ class BarCode128 {
 			$this->drawBorder();
 		}
 		
+		if (!empty($this->getText())) {
+			$this->drawText();
+		}
+
 		$this->drawBarCode();
 		
 		if ($this->getShowCode()) {
@@ -145,6 +153,10 @@ class BarCode128 {
 			$this->drawBorder();
 		}
 		
+		if (!empty($this->getText())) {
+			$this->drawText();
+		}
+
 		$this->drawBarCode();
 		
 		if ($this->getShowCode()) {
@@ -191,11 +203,16 @@ class BarCode128 {
 			}
 			
 			for ($j = 0; $j < $this->getLineWidth(); $j++) {
-				if ($this->getShowCode()) {
-					$y1 = $this->getBorderWidth() + $this->getBorderSpacing();
-					$y2 = ($this->getHeight() - ($this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing())) - $this->bbox['height'];
+				// start
+				if (!empty($this->getText())) {
+					$y1 = $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing() + $this->fontSize;
 				} else {
-					$y1 = $this->getBorderWidth() + $this->getBorderSpacing();
+					$y1 = $this->getBorderWith() + $this->getBorderSpacing();
+				}
+				// end
+				if ($this->getShowCode()) {
+					$y2 = ($this->getHeight() - ($this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing())) - $this->bboxCode['height'];
+				} else {
 					$y2 = $this->getHeight() - ($this->getBorderWidth() + $this->getBorderSpacing());
 				}
 				
@@ -207,10 +224,17 @@ class BarCode128 {
 	}
 	
 	private function drawCode() {
-		$x = (($this->getWidth() - $this->bbox['width']) / 2) - abs($this->bbox['x']);
-		$y = $this->getHeight() - abs($this->bbox[1]) - $this->getBorderWidth() - $this->getBorderSpacing();
+		$x = (($this->getWidth() - $this->bboxCode['width']) / 2) - abs($this->bboxCode['x']);
+		$y = $this->getHeight() - abs($this->bboxCode[1]) - $this->getBorderWidth() - $this->getBorderSpacing();
 		
 		imagettftext($this->image, $this->getFontSize(), 0, $x, $y, $this->black, $this->getFont(), $this->getCode());
+	}
+
+	private function drawText() {
+		$x = (($this->getWidth() -$this->bboxText['width']) / 2) - abs($this->bboxText['x']);
+		$y = abs($this->bboxText[1]) + $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing();
+
+		imagettftext($this->image, $this->fontSize, 0, $x, $y, $this->black, $this->getFont(), $this->getText());
 	}
 	
 	
@@ -234,6 +258,14 @@ class BarCode128 {
 	
 	public function getShowCode() {
 		return $this->flags['showCode'];
+	}
+
+	public function setText($val) {
+		$this->text = trim($val);
+	}
+
+	public function getText() {
+		return $this->text;
 	}
 	
 	public function setFontResize($val) {
@@ -345,8 +377,9 @@ class BarCode128 {
 				$width = $this->getWidth() - ($this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing() * 2);
 				$this->setFontSize($this->calcFontSize($width));
 			} else {
-				$this->bbox = $this->calcTTFBBox($this->getFontSize(), $this->getFont(), $this->getCode());
+				$this->bboxCode = $this->calcTTFBBox($this->getFontSize(), $this->getFont(), $this->getCode());
 			}
+			$this->bboxText = $this->calcTTFBBox($this->fontSize, $this->getFont(), $this->getText());
 		}
 	}
 	
@@ -370,7 +403,7 @@ class BarCode128 {
 		$i = 1; $run = true;
 		while ($run) {
 			$bbox = $this->calcTTFBBox($i, $this->getFont(), $this->getCode());
-			if ($bbox['width'] < $width) {
+			if ($bboxCode['width'] < $width) {
 				$i++;
 			} else {
 				$i--;
@@ -378,12 +411,12 @@ class BarCode128 {
 				$run = false;
 			}
 		}
-		$this->bbox = $bbox;
+		$this->bboxCode = $bbox;
 		return $i;
 	}
 	
-	private function calcTTFBBox($fontSize, $font, $code) {
-		$bbox = imagettfbbox($fontSize, 0, $font, $code);
+	private function calcTTFBBox($fontSize, $font, $text) {
+		$bbox = imagettfbbox($fontSize, 0, $font, $text);
 		if($bbox[0] >= -1) {
 			$bbox['x'] = abs($bbox[0] + 1) * -1;
 		} else {
