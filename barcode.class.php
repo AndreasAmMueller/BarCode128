@@ -77,7 +77,7 @@ class BarCode128 {
 		$this->setBorderSpacing(10);
 		$this->setLineWidth(1);
 		$this->setTextSpacing(5);
-		$this->setText('');
+		$this->setCustomText('');
 		$this->setShowCode(true);
 		$this->setFontResize(false);
 		
@@ -111,7 +111,7 @@ class BarCode128 {
 			$this->drawBorder();
 		}
 		
-		if (!empty($this->getText())) {
+		if (!empty($this->getCustomText())) {
 			$this->drawText();
 		}
 
@@ -153,7 +153,7 @@ class BarCode128 {
 			$this->drawBorder();
 		}
 		
-		if (!empty($this->getText())) {
+		if (!empty($this->getCustomText())) {
 			$this->drawText();
 		}
 
@@ -204,7 +204,7 @@ class BarCode128 {
 			
 			for ($j = 0; $j < $this->getLineWidth(); $j++) {
 				// start
-				if (!empty($this->getText())) {
+				if (!empty($this->getCustomText())) {
 					$y1 = $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing() + $this->fontSize;
 				} else {
 					$y1 = $this->getBorderWidth() + $this->getBorderSpacing();
@@ -234,7 +234,7 @@ class BarCode128 {
 		$x = (($this->getWidth() -$this->bboxText['width']) / 2) - abs($this->bboxText['x']);
 		$y = abs($this->bboxText[1]) + $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing();
 
-		imagettftext($this->image, $this->fontSize, 0, $x, $y, $this->black, $this->getFont(), $this->getText());
+		imagettftext($this->image, $this->fontSize, 0, $x, $y, $this->black, $this->getFont(), $this->getCustomText());
 	}
 	
 	
@@ -260,11 +260,11 @@ class BarCode128 {
 		return $this->flags['showCode'];
 	}
 
-	public function setText($val) {
+	public function setCustomText($val) {
 		$this->text = trim($val);
 	}
 
-	public function getText() {
+	public function getCustomText() {
 		return $this->text;
 	}
 	
@@ -379,7 +379,7 @@ class BarCode128 {
 			} else {
 				$this->bboxCode = $this->calcTTFBBox($this->getFontSize(), $this->getFont(), $this->getCode());
 			}
-			$this->bboxText = $this->calcTTFBBox($this->fontSize, $this->getFont(), $this->getText());
+			$this->bboxText = $this->calcTTFBBox($this->fontSize, $this->getFont(), $this->getCustomText());
 		}
 	}
 	
