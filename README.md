@@ -45,7 +45,7 @@ $barcode->save('barcode.gif');
 
 ### The Result
 
-![image](barcode.gif)
+![image](https://bytebucket.org/BlackyPanther/barcode128/raw/7a676e942fb3e599b19ad539f93440b05f74de09/barcode.gif)
 
 ## Options
 
