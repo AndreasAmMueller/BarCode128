@@ -4,7 +4,7 @@
  * barcode.class.php
  *
  * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.0-20140312
+ * @version 1.0-20140629
  *
  * @description
  * With this class you can produce Barcodes
@@ -23,24 +23,24 @@ class BarCode128 {
 	private $set    = array();
 	private $vals   = array();
 	private $curSet = '';
-	
+
 	private $checksum = array(
 	'value' => 0,
 	'data'  => array()
 	);
-	
+
 	private $encoding = array(
 	'value'   => '',
 	'data'    => array(),
 	'strings' => array()
 	);
-	
+
 	private $code = array(
 	'value' => '',
 	'data'  => array()
 	);
 	private $text;
-	
+
 	private $dims = array(
 	'width'       => 0,
 	'height'      => 0,
@@ -52,26 +52,26 @@ class BarCode128 {
 
 	private $bboxCode;
 	private $bboxText;
-	
+
 	private $font;
 	private $fontSize;
 	private $calcFontSize;
-	
+
 	private $flags = array(
 	'fontResize' => false,
 	'showCode'   => false
 	);
-	
+
 	private $image;
 	private $white, $black;
-	
-	
+
+
 	// constructor
-	public function __construct($code, $height = 150, $font = false, $fontSize = 10) {
+	public function __construct($code, $height = 150, $font = null, $fontSize = 10) {
 		// set code for bar-parsing
 		$this->setCodecSet();
 		$this->setCode($code);
-		
+
 		// default settings
 		$this->setBorderWidth(2);
 		$this->setBorderSpacing(10);
@@ -80,47 +80,47 @@ class BarCode128 {
 		$this->setCustomText('');
 		$this->setShowCode(true);
 		$this->setFontResize(false);
-		
+
 		// add font, if given
-		if ($font != false) {
+		if ($font != null) {
 			$this->addFont($font, $fontSize);
 		}
-		
+
 		// calc width and height
 		$this->setHeight($height - ($this->getBorderWidth() + $this->getBorderSpacing()) * 2);
 		$this->setWidth($this->calcWidth());
 	}
-	
-	
+
+
 	/* --- IMAGE AND DRAWS ---
 	----------------------- */
 	private function allocateColors() {
 		$this->white = imagecolorallocate($this->image, 0xff, 0xff, 0xff);
 		$this->black = imagecolorallocate($this->image, 0x00, 0x00, 0x00);
 	}
-	
+
 	public function draw($type = 'png') {
 		$this->setWidth($this->calcWidth());
-		
+
 		$this->image = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		$this->allocateColors();
 		$white = imagecolorallocate($this->image, 0xff, 0xff, 0xff);
 		imagefill($this->image, 0, 0, $this->white);
-		
+
 		if ($this->getBorderWidth() > 0) {
 			$this->drawBorder();
 		}
-		
+
 		if (!empty($this->text)) {
 			$this->drawText();
 		}
 
 		$this->drawBarCode();
-		
+
 		if ($this->getShowCode()) {
 			$this->drawCode();
 		}
-		
+
 		switch ($type) {
 		case 'gif':
 			header('Content-Type: image/gif');
@@ -137,32 +137,32 @@ class BarCode128 {
 		}
 		imagedestroy($this->image);
 	}
-	
+
 	public function save($file = 'barcode.png') {
 		$tmp = explode('.', $file);
 		$type = $tmp[(count($tmp)-1)];
-		
+
 		$this->setWidth($this->calcWidth());
-		
+
 		$this->image = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		$this->allocateColors();
 		$white = imagecolorallocate($this->image, 0xff, 0xff, 0xff);
 		imagefill($this->image, 0, 0, $this->white);
-		
+
 		if ($this->getBorderWidth() > 0) {
 			$this->drawBorder();
 		}
-		
+
 		if (!empty($this->text)) {
 			$this->drawText();
 		}
 
 		$this->drawBarCode();
-		
+
 		if ($this->getShowCode()) {
 			$this->drawCode();
 		}
-		
+
 		switch ($type) {
 		case 'gif':
 			imagegif($this->image, $file);
@@ -176,7 +176,7 @@ class BarCode128 {
 		}
 		imagedestroy($this->image);
 	}
-	
+
 	private function drawBorder() {
 		$w = $this->getWidth();
 		$h = $this->getHeight();
@@ -190,18 +190,18 @@ class BarCode128 {
 			imageline($this->image, $x2, $y1, $x2, ($y2-1), $this->black);
 		}
 	}
-	
+
 	private function drawBarCode() {
 		$str = $this->encoding['value'];
 		$x = $this->getBorderWidth() + $this->getBorderSpacing();
-		
+
 		for ($i = 0; $i < strlen($str); $i++) {
 			if ($str{$i} == 1) {
 				$col = $this->black;
 			} else {
 				$col = $this->white;
 			}
-			
+
 			for ($j = 0; $j < $this->getLineWidth(); $j++) {
 				// start
 				if (!empty($this->text)) {
@@ -215,18 +215,18 @@ class BarCode128 {
 				} else {
 					$y2 = $this->getHeight() - ($this->getBorderWidth() + $this->getBorderSpacing());
 				}
-				
+
 				imagesetthickness($this->image, 1);
 				imageline($this->image, $x, $y1, $x, $y2, $col);
 				$x++;
 			}
 		}
 	}
-	
+
 	private function drawCode() {
 		$x = (($this->getWidth() - $this->bboxCode['width']) / 2) - abs($this->bboxCode['x']);
 		$y = $this->getHeight() - abs($this->bboxCode[1]) - $this->getBorderWidth() - $this->getBorderSpacing();
-		
+
 		imagettftext($this->image, $this->getFontSize(), 0, $x, $y, $this->black, $this->getFont(), $this->getCode());
 	}
 
@@ -236,26 +236,26 @@ class BarCode128 {
 
 		imagettftext($this->image, $this->fontSize, 0, $x, $y, $this->black, $this->getFont(), $this->text);
 	}
-	
-	
+
+
 	/* --- SIMPLE GETTER AND SETTER ---
 	-------------------------------- */
 	public function setCode($code) {
 		$this->code['value'] = $code;
 		$this->generateData();
 	}
-	
+
 	public function getCode() {
 		return $this->code['value'];
 	}
-	
+
 	public function setShowCode($val) {
 		if ($val != true && $val != false)
 				throw new Exception('show text can only be true or false');
-		
+
 		$this->flags['showCode'] = $val;
 	}
-	
+
 	public function getShowCode() {
 		return $this->flags['showCode'];
 	}
@@ -267,109 +267,108 @@ class BarCode128 {
 	public function getCustomText() {
 		return $this->text;
 	}
-	
+
 	public function setFontResize($val) {
 		if ($val != true && $val != false)
 				throw new Exception('font resize can only be true or false');
-		
+
 		$this->flags['fontResize'] = $val;
 	}
-	
+
 	public function getFontResize() {
 		return $this->flags['fontResize'];
 	}
-	
+
 	public function setLineWidth($px) {
 		if ($px < 1)
 				throw new Exception('line width less or equal zero');
-		
+
 		$this->dims['px_width'] = $px;
 		$this->setWidth($this->calcWidth());
 	}
-	
+
 	public function getLineWidth() {
 		return $this->dims['px_width'];
 	}
-	
+
 	public function setBorderSpacing($px) {
 		if ($px < 0)
 				throw new Exception('border spacing less than zero');
-		
+
 		$this->dims['b_spacing'] = $px;
 		$this->setWidth($this->calcWidth());
 	}
-	
+
 	public function getBorderSpacing() {
 		return $this->dims['b_spacing'];
 	}
-	
+
 	public function setBorderWidth($px) {
 		if ($px < 0)
 				throw new Exception('border width less than zero');
-		
+
 		$this->dims['b_width'] = $px;
 		$this->setWidth($this->calcWidth());
 	}
-	
+
 	public function getBorderWidth() {
 		return $this->dims['b_width'];
 	}
-	
+
 	public function setTextSpacing($px) {
 		if ($px < 0)
 				throw new Exception('text spacing less than zero');
-		
+
 		$this->dims['txt_spacing'] = $px;
 	}
-	
+
 	public function getTextSpacing() {
 		return $this->dims['txt_spacing'];
 	}
-	
+
 	public function addFont($font, $fontSize) {
 		$this->setFont($font);
 		$this->initFontSize($fontSize);
 	}
-	
+
 	private function setFont($font) {
 		if (!file_exists($font))
 				throw new Exception('font does not exists');
-		
+
 		$this->font = $font;
 	}
-	
+
 	private function initFontSize($size) {
 		if ($size < 1)
 				throw new Exception('font size less or equal zero');
-		
+
 		$this->fontSize = $size;
 		$this->calcFontSize = $size;
 	}
-	
+
 	public function getFont() {
 		return $this->font;
 	}
-	
+
 	private function setFontSize($px) {
 		$this->calcFontSize = $px;
 	}
-	
+
 	public function getFontSize() {
 		return $this->calcFontSize;
 	}
-	
-	
+
+
 	/* --- IMAGE DIMENSIONS ---
 	------------------------ */
-	
 	private function setHeight($px) {
 		$this->dims['height'] = $px;
 	}
-	
+
 	public function getHeight() {
 		return $this->dims['height'];
 	}
-	
+
 	private function setWidth($px) {
 		$this->dims['width'] = $px;
 		if ($this->font != false) {
@@ -382,12 +381,12 @@ class BarCode128 {
 			$this->bboxText = $this->calcTTFBBox($this->fontSize, $this->getFont(), $this->text);
 		}
 	}
-	
+
 	public function getWidth() {
 		return $this->dims['width'];
 	}
-	
-	
+
+
 	/* --- CALCULATIONS ---
 	-------------------- */
 	private function calcWidth() {
@@ -395,10 +394,10 @@ class BarCode128 {
 		$px  = $this->getLineWidth();
 		$b   = $this->getBorderWidth();
 		$sp  = $this->getBorderSpacing();
-		
+
 		return ($len * $px + ($b + $sp) * 2);
 	}
-	
+
 	private function calcFontSize($width) {
 		$i = 1; $run = true;
 		while ($run) {
@@ -414,7 +413,7 @@ class BarCode128 {
 		$this->bboxCode = $bbox;
 		return $i;
 	}
-	
+
 	private function calcTTFBBox($fontSize, $font, $text) {
 		$bbox = imagettfbbox($fontSize, 0, $font, $text);
 		if($bbox[0] >= -1) {
@@ -433,8 +432,8 @@ class BarCode128 {
 		}
 		return $bbox;
 	}
-	
-	
+
+
 	/* --- DATA FOR ENCODING ---
 	------------------------- */
 	private function generateData() {
@@ -462,29 +461,29 @@ class BarCode128 {
 			}
 		}
 		$this->code['data'] = $data;
-		
+
 		$this->setStartSet($this->getCharSet($data[0]));
-		
+
 		for ($i = 0; $i < count($data); ++$i) {
 			$set = $this->getCharSet($data[$i]);
 			if ($set != $this->curSet) {
 				$this->changeSet($set);
 			}
-			
+
 			$val = $this->getCharVal($set, $data[$i]);
 			$this->addChecksum($val);
 			$this->addEncoding($val);
 		}
-		
+
 		$chk = $this->checksum['value'];
 		$this->addEncoding($chk % 103);
 		$this->addEncoding(106);
 	}
-	
+
 	private function getCharVal($set, $char) {
 		return $this->set[$set][$char];
 	}
-	
+
 	private function changeSet($set) {
 		$this->curSet = $set;
 		switch ($set) {
@@ -502,12 +501,12 @@ class BarCode128 {
 			break;
 		}
 	}
-	
+
 	private function getCharSet($char) {
 		$set = $this->set;
 		$curSet = $this->curSet;
 		$sets = array('A', 'B', 'C');
-		
+
 		if (!empty($curSet)) {
 			if (array_key_exists($char, $set[$curSet])) {
 				return $curSet;
@@ -516,14 +515,14 @@ class BarCode128 {
 			unset($sets[$index]);
 			sort($sets);
 		}
-		
+
 		for ($i = 0; $i < count($sets); ++$i) {
 			if (array_key_exists($char, $set[$sets[$i]])) {
 				return $sets[$i];
 			}
 		}
 	}
-	
+
 	private function setStartSet($set) {
 		$this->curSet = $set;
 		switch ($set) {
@@ -541,40 +540,39 @@ class BarCode128 {
 			break;
 		}
 	}
-	
+
 	private function addChecksum($val) {
 		$chk = $this->checksum;
 		$count = count($chk['data']);
-		
+
 		if ($count == 0) {
 			$chk['data'][] = $val;
 		} else {
 			$chk['data'][] = ($val * $count);
 		}
 		$chk['value'] = array_sum($chk['data']);
-		
+
 		$this->checksum = $chk;
 	}
-	
+
 	private function addEncoding($val) {
 		$enc = $this->encoding;
-		
+
 		$enc['data'][] = $val;
 		$enc['value'] .= $this->getVal($val);
 		$enc['strings'][] = $this->getVal($val);
-		
+
 		$this->encoding = $enc;
 	}
-	
-	
-	
+
+
 	public function getVal($val) {
 		return $this->vals[$val];
 	}
-	
+
 	private function setCodecSet() {
 		$set = array(); $vals = array();
-		
+
 		$set['A']['SP']     = '0';
 		$set['A']['!']      = '1';
 		$set['A']['"']      = '2';
@@ -682,7 +680,7 @@ class BarCode128 {
 		$set['A']['STARTB'] = '104';
 		$set['A']['STARTC'] = '105';
 		$set['A']['STOP']   = '106';
-		
+
 		$set['B']['SP']     = '0';
 		$set['B']['!']      = '1';
 		$set['B']['"']      = '2';
@@ -716,7 +714,7 @@ class BarCode128 {
 		$set['B']['>']      = '30';
 		$set['B']['?']      = '31';
 		$set['B']['@']      = '32';
-		$set['B']['B']      = '33';
+		$set['B']['A']      = '33';
 		$set['B']['B']      = '34';
 		$set['B']['C']      = '35';
 		$set['B']['D']      = '36';
@@ -790,7 +788,7 @@ class BarCode128 {
 		$set['B']['STARTB'] = '104';
 		$set['B']['STARTC'] = '105';
 		$set['B']['STOP']   = '106';
-		
+
 		$set['C']['00']     = '0';
 		$set['C']['01']     = '1';
 		$set['C']['02']     = '2';
@@ -898,7 +896,7 @@ class BarCode128 {
 		$set['C']['STARTB'] = '104';
 		$set['C']['STARTC'] = '105';
 		$set['C']['STOP']   = '106';
-		
+
 		$vals['0']   = '11011001100';
 		$vals['1']   = '11001101100';
 		$vals['2']   = '11001100110';
@@ -1006,7 +1004,7 @@ class BarCode128 {
 		$vals['104'] = '11010010000';
 		$vals['105'] = '11010011100';
 		$vals['106'] = '1100011101011';
-		
+
 		$this->set  = $set;
 		$this->vals = $vals;
 	}

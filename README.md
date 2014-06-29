@@ -2,7 +2,7 @@
 
 With this class you can create Barcodes in [Code 128](http://en.wikipedia.org/wiki/Code_128).
 
-The Output is an Image (png | jpg | gif) and can be saved.
+The Output is an Image (png | jpg | gif) and can be easily saved.
 
 ## Default Functionality
 
@@ -33,7 +33,7 @@ $height = 130;
 $barcode = new BarCode128($code, $height);
 
 // OPTIONAL: add the font
-// if not: no Text can be written (only bars)
+// if not: text can't be written (only bars)
 $barcode->addFont($font, $fontSize);
 
 // OPTIONAL: add the text above the barcode
