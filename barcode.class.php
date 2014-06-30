@@ -4,7 +4,7 @@
  * barcode.class.php
  *
  * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.0-20140629
+ * @version 1.0-20140630
  *
  * @description
  * With this class you can produce Barcodes
@@ -443,20 +443,14 @@ class BarCode128 {
 			if ($i == strlen($code)-1) {
 				// last char
 				$val = $code{$i};
-				if ($val == ' ') {
-					$val = 'SP';
-				}
-				$data[] = $val;
+				$data[] = replaceSpecialChars($val);
 			} else {
 				if (is_numeric($code{$i}) && is_numeric($code{$i+1})) {
 					$data[] = $code{$i}.$code{$i+1};
 					$i++;
 				} else {
 					$val = $code{$i};
-					if ($val == ' ') {
-						$val = 'SP';
-					}
-					$data[] = $val;
+					$data[] = replaceSpecialChars($val);
 				}
 			}
 		}
@@ -478,6 +472,15 @@ class BarCode128 {
 		$chk = $this->checksum['value'];
 		$this->addEncoding($chk % 103);
 		$this->addEncoding(106);
+	}
+
+	private function replaceSpecialChars($val) {
+		switch ($val) {
+			case ' ': return 'SP';
+			case "\t": return 'HT';
+			case "\f": return 'FF';
+			default: return $val;
+		}
 	}
 
 	private function getCharVal($set, $char) {
