@@ -4,7 +4,7 @@
  * barcode.class.php
  *
  * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.0-20140630
+ * @version 1.1-20140630
  *
  * @description
  * With this class you can produce Barcodes
