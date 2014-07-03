@@ -4,7 +4,7 @@
  * barcode.class.php
  *
  * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.1-20140630
+ * @version 1.1-20140703
  *
  * @description
  * With this class you can produce Barcodes
@@ -456,7 +456,8 @@ class BarCode128 {
 		}
 		$this->code['data'] = $data;
 
-		$this->setStartSet($this->getCharSet($data[0]));
+		if (isset($data[0]))
+				$this->setStartSet($this->getCharSet($data[0]));
 
 		for ($i = 0; $i < count($data); ++$i) {
 			$set = $this->getCharSet($data[$i]);
