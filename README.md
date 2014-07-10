@@ -136,6 +136,13 @@ The type will be extracted from the file extension.
 `$file` has to be an absolute path. Possible file extensions: png, jpg or gif
 If an unknown extension is used the barcode image will choose _png_ encoding.
 
+## Environement
+
+- PHP >= 5.3.10
+- GD Version 2.0
+- Apple MacBook Pro 15-inch (Late 2011)
+- Raspberry Pi Typ B (as server)
+
 ## Sources
 
 - Font: [Open Font Library](http://openfontlibrary.org/en/font/hans-kendrick)

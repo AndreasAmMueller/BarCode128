@@ -443,14 +443,14 @@ class BarCode128 {
 			if ($i == strlen($code)-1) {
 				// last char
 				$val = $code{$i};
-				$data[] = replaceSpecialChars($val);
+				$data[] = $this->replaceSpecialChars($val);
 			} else {
 				if (is_numeric($code{$i}) && is_numeric($code{$i+1})) {
 					$data[] = $code{$i}.$code{$i+1};
 					$i++;
 				} else {
 					$val = $code{$i};
-					$data[] = replaceSpecialChars($val);
+					$data[] = $this->replaceSpecialChars($val);
 				}
 			}
 		}
