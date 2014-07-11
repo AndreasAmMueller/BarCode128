@@ -4,7 +4,7 @@
  * barcode.class.php
  *
  * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.1-20140710
+ * @version 1.1-20140711
  *
  * @description
  * With this class you can produce Barcodes
@@ -82,7 +82,9 @@ class BarCode128 {
 		$this->setFontResize(false);
 
 		// add font, if given
-		if ($font != null) {
+		if ($font == null) {
+			$this->font = null;
+		} else {
 			$this->addFont($font, $fontSize);
 		}
 
@@ -224,6 +226,9 @@ class BarCode128 {
 	}
 
 	private function drawCode() {
+		if ($this->font == null)
+				return;
+
 		$x = (($this->getWidth() - $this->bboxCode['width']) / 2) - abs($this->bboxCode['x']);
 		$y = $this->getHeight() - abs($this->bboxCode[1]) - $this->getBorderWidth() - $this->getBorderSpacing();
 
@@ -231,6 +236,9 @@ class BarCode128 {
 	}
 
 	private function drawText() {
+		if ($this->font == null)
+				return;
+
 		$x = (($this->getWidth() -$this->bboxText['width']) / 2) - abs($this->bboxText['x']);
 		$y = abs($this->bboxText[1]) + $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing();
 
