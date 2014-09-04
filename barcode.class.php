@@ -4,7 +4,7 @@
  * barcode.class.php
  *
  * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.1-20140711
+ * @version 1.2-20140904
  *
  * @description
  * With this class you can produce Barcodes
@@ -101,12 +101,11 @@ class BarCode128 {
 		$this->black = imagecolorallocate($this->image, 0x00, 0x00, 0x00);
 	}
 
-	public function draw($type = 'png') {
+	public function get($type = 'png') {
 		$this->setWidth($this->calcWidth());
 
 		$this->image = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		$this->allocateColors();
-		$white = imagecolorallocate($this->image, 0xff, 0xff, 0xff);
 		imagefill($this->image, 0, 0, $this->white);
 
 		if ($this->getBorderWidth() > 0) {
@@ -123,21 +122,40 @@ class BarCode128 {
 			$this->drawCode();
 		}
 
+		ob_start();
+
 		switch ($type) {
 		case 'gif':
-			header('Content-Type: image/gif');
 			imagegif($this->image);
 			break;
 		case 'jpg':
 		case 'jpeg':
-			header('Content-Type: image/jpeg');
 			imagejpeg($this->image);
 			break;
 		default:
-			header('Content-Type: image/png');
 			imagepng($this->image);
 		}
+
+		$img = ob_get_clean();
 		imagedestroy($this->image);
+
+		return $img;
+	}
+
+	public function draw($type = 'png') {
+		switch ($type) {
+		case 'gif':
+			header('Content-Type: image/gif');
+			break;
+		case 'jpg':
+		case 'jpeg':
+			header('Content-Type: image/jpeg');
+			break;
+		default:
+			header('Content-Type: image/png');
+		}
+
+		echo $this->get($type);
 	}
 
 	public function save($file = 'barcode.png') {
@@ -148,7 +166,6 @@ class BarCode128 {
 
 		$this->image = imagecreatetruecolor($this->getWidth(), $this->getHeight());
 		$this->allocateColors();
-		$white = imagecolorallocate($this->image, 0xff, 0xff, 0xff);
 		imagefill($this->image, 0, 0, $this->white);
 
 		if ($this->getBorderWidth() > 0) {
@@ -178,6 +195,7 @@ class BarCode128 {
 		}
 		imagedestroy($this->image);
 	}
+
 
 	private function drawBorder() {
 		$w = $this->getWidth();

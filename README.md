@@ -117,6 +117,14 @@ Only one font can be used! If you want to set (first call of the function) or ch
 
 The barcode has two options for an output
 
+### get()
+
+with this option you'll get the resulting image (binary) returned. So it may be possible to save many images in an array before printing them.
+
+`$bc = $barcode->get();` or `$bc = $barcode->get($type);`
+
+`$type` is optional and can be: png, jpg or gif. **Default:** png
+
 ### draw()
 
 with this option you print the resulting image (binary) to the stdandard output (screen).
