@@ -1,5 +1,7 @@
 # BarCode128
 
+-----
+
 With this class you can create Barcodes in [Code 128](http://en.wikipedia.org/wiki/Code_128).
 
 The Output is an Image (png | jpg | gif) and can be easily saved.
@@ -8,9 +10,9 @@ The Output is an Image (png | jpg | gif) and can be easily saved.
 
 The basic code isn't that much...
 
-### The Code
+**Example:**
 
-```
+```php
 <?php
 // get the class
 require_once __DIR__."/barcode.class.php";
@@ -43,9 +45,11 @@ $barcode->save('barcode.gif');
 ?>
 ```
 
-### The Result
+**Result:**
 
-![image](http://dev.am-wd.de/pics/barcode.gif)
+![image](barcode.gif)
+
+-----
 
 ## Options
 
@@ -65,7 +69,6 @@ The barcode can be framed. So you can easily print and cut it out.
 
 `$value` is the size in Pixel. Zero means: no Frame. **Default:** 2
 
-----------------------------------------------------------------------
 You can adjust the spacing between border and text/barcode
 
 `$barcode->setBorderSpacing($value);`
@@ -111,11 +114,13 @@ Only one font can be used! If you want to set (first call of the function) or ch
 
 `$barcode->addFont($font, $size);`
 
-`$font` is the _absolute_ path to your font file (recommendation: TrueTypeFont: ttf). **Default:** false
+`$font` is the *absolute* path to your font file (recommendation: TrueTypeFont: ttf). **Default:** false
+
+-----
 
 ## Output
 
-The barcode has two options for an output
+The barcode has these options for an output
 
 ### get()
 
@@ -128,7 +133,7 @@ with this option you'll get the resulting image (binary) returned. So it may be 
 ### draw()
 
 with this option you print the resulting image (binary) to the stdandard output (screen).
-This is you option, if you want to create dynamic barcodes (without saving them)
+This is your option, if you want to create dynamic barcodes (without saving them)
 
 `$barcode->draw()` or `$barcode->draw($type)`
 
@@ -142,7 +147,7 @@ The type will be extracted from the file extension.
 `$barcode->save($file)`
 
 `$file` has to be an absolute path. Possible file extensions: png, jpg or gif
-If an unknown extension is used the barcode image will choose _png_ encoding.
+If an unknown extension is used the barcode image will choose *png* encoding.
 
 ## Environement
 
@@ -151,7 +156,16 @@ If an unknown extension is used the barcode image will choose _png_ encoding.
 - Apple MacBook Pro 15-inch (Late 2011)
 - Raspberry Pi Typ B (as server)
 
+## Bugs / Issues
+
+Please report bugs to [Bitbucket | Issues](https://bitbucket.org/BlackyPanther/barcodes-128/issues)
+
 ## Sources
 
 - Font: [Open Font Library](http://openfontlibrary.org/en/font/hans-kendrick)
 - Encoding: [Wikipedia](http://en.wikipedia.org/wiki/Code_128)
+
+-----
+
+### LICENSE
+My scripts are published under [MIT License](https://am-wd.de/index.php?p=about#license).
