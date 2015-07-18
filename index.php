@@ -18,7 +18,7 @@ $fontSize = 12;
 $height = 130;
 
 // create an Object of BarCode128 Class
-$barcode = new BarCode128($code, $height);
+$barcode = new AMWD\BarCode128($code, $height);
 
 // OPTIONAL: add the font
 // if not: no Text can be written (only bars)

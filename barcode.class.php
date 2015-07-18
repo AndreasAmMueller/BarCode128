@@ -10,6 +10,7 @@
  * With this class you can produce Barcodes
  * in Code128 style (full ASCII)
  **/
+namespace AMWD;
 
 @error_reporting(0);
 
