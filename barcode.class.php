@@ -278,7 +278,7 @@ class BarCode128 {
 
 	public function setShowCode($val) {
 		if ($val != true && $val != false)
-				throw new Exception('show text can only be true or false');
+				throw new \Exception('show text can only be true or false');
 
 		$this->flags['showCode'] = $val;
 	}
@@ -297,7 +297,7 @@ class BarCode128 {
 
 	public function setFontResize($val) {
 		if ($val != true && $val != false)
-				throw new Exception('font resize can only be true or false');
+				throw new \Exception('font resize can only be true or false');
 
 		$this->flags['fontResize'] = $val;
 	}
@@ -308,7 +308,7 @@ class BarCode128 {
 
 	public function setLineWidth($px) {
 		if ($px < 1)
-				throw new Exception('line width less or equal zero');
+				throw new \Exception('line width less or equal zero');
 
 		$this->dims['px_width'] = $px;
 		$this->setWidth($this->calcWidth());
@@ -320,7 +320,7 @@ class BarCode128 {
 
 	public function setBorderSpacing($px) {
 		if ($px < 0)
-				throw new Exception('border spacing less than zero');
+				throw new \Exception('border spacing less than zero');
 
 		$this->dims['b_spacing'] = $px;
 		$this->setWidth($this->calcWidth());
@@ -332,7 +332,7 @@ class BarCode128 {
 
 	public function setBorderWidth($px) {
 		if ($px < 0)
-				throw new Exception('border width less than zero');
+				throw new \Exception('border width less than zero');
 
 		$this->dims['b_width'] = $px;
 		$this->setWidth($this->calcWidth());
@@ -344,7 +344,7 @@ class BarCode128 {
 
 	public function setTextSpacing($px) {
 		if ($px < 0)
-				throw new Exception('text spacing less than zero');
+				throw new \Exception('text spacing less than zero');
 
 		$this->dims['txt_spacing'] = $px;
 	}
@@ -360,14 +360,14 @@ class BarCode128 {
 
 	private function setFont($font) {
 		if (!file_exists($font))
-				throw new Exception('font does not exists');
+				throw new \Exception('font does not exists');
 
 		$this->font = $font;
 	}
 
 	private function initFontSize($size) {
 		if ($size < 1)
-				throw new Exception('font size less or equal zero');
+				throw new \Exception('font size less or equal zero');
 
 		$this->fontSize = $size;
 		$this->calcFontSize = $size;
