@@ -1,131 +1,230 @@
 <?php
 
 /**
- * barcode.class.php
+ * Barcode128.class.php
  *
- * @author Andreas Mueller <webmaster@am-wd.de>
- * @version 1.2-20140904
- *
- * @description
- * With this class you can produce Barcodes
- * in Code128 style (full ASCII)
- **/
+ * (c) Andreas Mueller <webmaster@am-wd.de>
+ */
+
 namespace AMWD;
 
-@error_reporting(0);
+/**
+ * Class to generate Barcodes with Code128
+ *
+ * @package    AMWD
+ * @author     Andreas Mueller <webmaster@am-wd.de>
+ * @copyright  (c) 2015 Andreas Mueller
+ * @license    MIT - http://am-wd.de/index.php?p=about#license
+ * @link       https://bitbucket.org/BlackyPanther/barcodes-128
+ * @version    v1.0-20151222 | stable; no testcases
+ */
 
-/* ---                     DEPENDENCIES                           ---
------------------------------------------------------------------- */
-function_exists('imagecreatetruecolor') or die('GD Library needed');
+/* ---                     DEPENDENCIES                          ---
+----------------------------------------------------------------- */
+function_exists('imagecreatetruecolor') || die('GD Library needed');
 
-
-class BarCode128 {
-	// Class Attributes
+class BarCode128
+{
+	/**
+	 * Sets of character codecs
+	 * @var string[]
+	 */
 	private $set    = array();
+	
+	/**
+	 * Bit order for every char codec
+	 * @var string[]
+	 */
 	private $vals   = array();
+	
+	/**
+	 * Value contains current set
+	 * @var string
+	 */
 	private $curSet = '';
 
+	/**
+	 * Array contains information for the checksum
+	 * @var mixed[]
+	 */
 	private $checksum = array(
-	'value' => 0,
-	'data'  => array()
+		'value' => 0,
+		'data'  => array()
 	);
 
+	/**
+	 * Array contains information about the encoding
+	 * @var mixed[]
+	 */
 	private $encoding = array(
-	'value'   => '',
-	'data'    => array(),
-	'strings' => array()
+		'value'   => '',
+		'data'    => array(),
+		'strings' => array()
 	);
 
+	/**
+	 * Array with infos for the binary code
+	 * @var mixed[]
+	 */
 	private $code = array(
-	'value' => '',
-	'data'  => array()
+		'value' => '',
+		'data'  => array()
 	);
+
+	/**
+	 * The readable text above the barcode
+	 * @var string
+	 */
 	private $text;
 
+	/**
+	 * Array with all dimensions
+	 * @var int[]
+	 */
 	private $dims = array(
-	'width'       => 0,
-	'height'      => 0,
-	'b_width'     => 0,
-	'b_spacing'   => 0,
-	'px_width'    => 0,
-	'txt_spacing' => 0
+		'width'       => 0,
+		'height'      => 0,
+		'b_width'     => 0,
+		'b_spacing'   => 0,
+		'px_width'    => 0,
+		'txt_spacing' => 0
 	);
 
+	/**
+	 * Array containing measures of TTFBBox for barcode
+	 * mixed[]
+	 */
 	private $bboxCode;
+	
+	/**
+	 * Array containing measures of TTFBBox for text
+	 * mixed[]
+	 */
 	private $bboxText;
 
+	/**
+	 * Path to font
+	 * @var string
+	 */
 	private $font;
+	
+	/**
+	 * Fontsize
+	 * @var int
+	 */
 	private $fontSize;
+	
+	/**
+	 * Calculated font size if text doesn't fit
+	 * @var int
+	 */
 	private $calcFontSize;
 
+	/**
+	 * Flags for usage
+	 * @var bool[]
+	 */
 	private $flags = array(
-	'fontResize' => false,
-	'showCode'   => false
+		'fontResize' => false,
+		'showCode'   => false
 	);
 
+	/**
+	 * The image itself
+	 * @var string
+	 */
 	private $image;
+	
+	/**
+	 * Defined colors
+	 * @var string
+	 */
 	private $white, $black;
 
 
-	// constructor
-	public function __construct($code, $height = 150, $font = null, $fontSize = 10) {
+	/**
+	 * Initializes a new instance of BarCode128
+	 * 
+	 * @param string  $code               Content of barcode
+	 * @param integer [$height    = 150]  Height of the image in px
+	 * @param string  [$font      = null] Path to font to use
+	 * @param integer [$fontSize  = 10]   Fontsize to use
+	 */
+	public function __construct($code, $height = 150, $font = null, $fontSize = 10)
+	{
 		// set code for bar-parsing
 		$this->setCodecSet();
-		$this->setCode($code);
+		$this->Code($code);
 
 		// default settings
-		$this->setBorderWidth(2);
-		$this->setBorderSpacing(10);
-		$this->setLineWidth(1);
-		$this->setTextSpacing(5);
-		$this->setCustomText('');
-		$this->setShowCode(true);
-		$this->setFontResize(false);
+		$this->BorderWidth(2);
+		$this->BorderSpacing(10);
+		$this->LineWidth(1);
+		$this->TextSpacing(5);
+		$this->CustomText('');
+		$this->ShowCode(true);
+		$this->FontResize(false);
 
 		// add font, if given
-		if ($font == null) {
+		if ($font == null)
+		{
 			$this->font = null;
-		} else {
+		}
+		else
+		{
 			$this->addFont($font, $fontSize);
 		}
 
 		// calc width and height
-		$this->setHeight($height - ($this->getBorderWidth() + $this->getBorderSpacing()) * 2);
-		$this->setWidth($this->calcWidth());
+		$this->Height($height - ($this->BorderWidth() + $this->BorderSpacing()) * 2);
+		$this->Width($this->calcWidth());
 	}
 
 
-	/* --- IMAGE AND DRAWS ---
-	----------------------- */
-	private function allocateColors() {
+	// --- IMAGE AND DRAWS
+	// ===========================================================================
+	
+	/**
+	 * Set colors
+	 * 
+	 * @return void
+	 */
+	private function allocateColors()
+	{
 		$this->white = imagecolorallocate($this->image, 0xff, 0xff, 0xff);
 		$this->black = imagecolorallocate($this->image, 0x00, 0x00, 0x00);
 	}
 
-	public function get($type = 'png') {
-		$this->setWidth($this->calcWidth());
+	/**
+	 * Return image as in buffers
+	 * 
+	 * @param  string [$type  = 'png'] Filetype (extension)
+	 * 
+	 * @return string The image itself
+	 */
+	public function get($type = 'png')
+	{
+		$this->Width($this->calcWidth());
 
-		$this->image = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		$this->image = imagecreatetruecolor($this->Width(), $this->Height());
 		$this->allocateColors();
 		imagefill($this->image, 0, 0, $this->white);
 
-		if ($this->getBorderWidth() > 0) {
+		if ($this->BorderWidth() > 0)
 			$this->drawBorder();
-		}
 
-		if (!empty($this->text)) {
+		if (!empty($this->text))
 			$this->drawText();
-		}
 
 		$this->drawBarCode();
 
-		if ($this->getShowCode()) {
+		if ($this->ShowCode())
 			$this->drawCode();
-		}
 
 		ob_start();
 
-		switch ($type) {
+		switch ($type)
+		{
 		case 'gif':
 			imagegif($this->image);
 			break;
@@ -143,8 +242,17 @@ class BarCode128 {
 		return $img;
 	}
 
-	public function draw($type = 'png') {
-		switch ($type) {
+	/**
+	 * Print the image to screen
+	 * 
+	 * @param string [$type  = 'png'] Filetype (extension)
+	 * 
+	 * @return void
+	 */
+	public function draw($type = 'png')
+	{
+		switch ($type)
+		{
 		case 'gif':
 			header('Content-Type: image/gif');
 			break;
@@ -159,50 +267,62 @@ class BarCode128 {
 		echo $this->get($type);
 	}
 
-	public function save($file = 'barcode.png') {
+	/**
+	 * Save the image to file
+	 * 
+	 * @param string [$file  = 'barcode.png'] File path
+	 * 
+	 * @return void
+	 */
+	public function save($file = 'barcode.png')
+	{
 		$tmp = explode('.', $file);
 		$type = $tmp[(count($tmp)-1)];
 
-		$this->setWidth($this->calcWidth());
+		$this->Width($this->calcWidth());
 
-		$this->image = imagecreatetruecolor($this->getWidth(), $this->getHeight());
+		$this->image = imagecreatetruecolor($this->Width(), $this->Height());
 		$this->allocateColors();
 		imagefill($this->image, 0, 0, $this->white);
 
-		if ($this->getBorderWidth() > 0) {
+		if ($this->BorderWidth() > 0)
 			$this->drawBorder();
-		}
 
-		if (!empty($this->text)) {
+		if (!empty($this->text))
 			$this->drawText();
-		}
 
 		$this->drawBarCode();
 
-		if ($this->getShowCode()) {
+		if ($this->ShowCode())
 			$this->drawCode();
+
+		switch ($type)
+		{
+			case 'gif':
+				imagegif($this->image, $file);
+				break;
+			case 'jpg':
+			case 'jpeg':
+				imagejpeg($this->image, $file);
+				break;
+			default:
+				imagepng($this->image, $file);
 		}
 
-		switch ($type) {
-		case 'gif':
-			imagegif($this->image, $file);
-			break;
-		case 'jpg':
-		case 'jpeg':
-			imagejpeg($this->image, $file);
-			break;
-		default:
-			imagepng($this->image, $file);
-		}
 		imagedestroy($this->image);
 	}
 
-
-	private function drawBorder() {
-		$w = $this->getWidth();
-		$h = $this->getHeight();
+	/**
+	 * Draw the borders around the barcode
+	 * 
+	 * @return void
+	 */
+	private function drawBorder()
+	{
+		$w = $this->Width();
+		$h = $this->Height();
 		imagesetthickness($this->image, 1);
-		for ($i = 0; $i < $this->getBorderWidth(); $i++) {
+		for ($i = 0; $i < $this->BorderWidth(); $i++) {
 			$x1 = $i; $y1 = $i;
 			$x2 = $w-$i-1; $y2 = $h-$i-1;
 			imageline($this->image, $x1, $y1, ($x2-1), $y1, $this->black);
@@ -212,29 +332,47 @@ class BarCode128 {
 		}
 	}
 
-	private function drawBarCode() {
+	/**
+	 * Draw the bars
+	 * 
+	 * @return void
+	 */
+	private function drawBarCode()
+	{
 		$str = $this->encoding['value'];
-		$x = $this->getBorderWidth() + $this->getBorderSpacing();
+		$x = $this->BorderWidth() + $this->BorderSpacing();
 
-		for ($i = 0; $i < strlen($str); $i++) {
-			if ($str{$i} == 1) {
+		for ($i = 0; $i < strlen($str); $i++)
+		{
+			if ($str{$i} == 1)
+			{
 				$col = $this->black;
-			} else {
+			}
+			else
+			{
 				$col = $this->white;
 			}
 
-			for ($j = 0; $j < $this->getLineWidth(); $j++) {
+			for ($j = 0; $j < $this->LineWidth(); $j++)
+			{
 				// start
-				if (!empty($this->text)) {
-					$y1 = $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing() + $this->fontSize;
-				} else {
-					$y1 = $this->getBorderWidth() + $this->getBorderSpacing();
+				if (!empty($this->text))
+				{
+					$y1 = $this->BorderWidth() + $this->BorderSpacing() + $this->TextSpacing() + $this->fontSize;
+				}
+				else
+				{
+					$y1 = $this->BorderWidth() + $this->BorderSpacing();
 				}
 				// end
-				if ($this->getShowCode()) {
-					$y2 = ($this->getHeight() - ($this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing())) - $this->bboxCode['height'];
-				} else {
-					$y2 = $this->getHeight() - ($this->getBorderWidth() + $this->getBorderSpacing());
+
+				if ($this->ShowCode())
+				{
+					$y2 = ($this->Height() - ($this->BorderWidth() + $this->BorderSpacing() + $this->TextSpacing())) - $this->bboxCode['height'];
+				}
+				else
+				{
+					$y2 = $this->Height() - ($this->BorderWidth() + $this->BorderSpacing());
 				}
 
 				imagesetthickness($this->image, 1);
@@ -244,196 +382,343 @@ class BarCode128 {
 		}
 	}
 
-	private function drawCode() {
+	/**
+	 * Draw the encoded text below the bars
+	 * 
+	 * @return void
+	 */
+	private function drawCode()
+	{
 		if ($this->font == null)
 				return;
 
-		$x = (($this->getWidth() - $this->bboxCode['width']) / 2) - abs($this->bboxCode['x']);
-		$y = $this->getHeight() - abs($this->bboxCode[1]) - $this->getBorderWidth() - $this->getBorderSpacing();
+		$x = (($this->Width() - $this->bboxCode['width']) / 2) - abs($this->bboxCode['x']);
+		$y = $this->Height() - abs($this->bboxCode[1]) - $this->BorderWidth() - $this->BorderSpacing();
 
-		imagettftext($this->image, $this->getFontSize(), 0, $x, $y, $this->black, $this->getFont(), $this->getCode());
+		imagettftext($this->image, $this->FontSize(), 0, $x, $y, $this->black, $this->getFont(), $this->Code());
 	}
 
-	private function drawText() {
+	/**
+	 * Draw custom text above the bars
+	 * 
+	 * @return void
+	 */
+	private function drawText()
+	{
 		if ($this->font == null)
 				return;
 
-		$x = (($this->getWidth() -$this->bboxText['width']) / 2) - abs($this->bboxText['x']);
-		$y = abs($this->bboxText[1]) + $this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing();
+		$x = (($this->Width() -$this->bboxText['width']) / 2) - abs($this->bboxText['x']);
+		$y = abs($this->bboxText[1]) + $this->BorderWidth() + $this->BorderSpacing() + $this->TextSpacing();
 
 		imagettftext($this->image, $this->fontSize, 0, $x, $y, $this->black, $this->getFont(), $this->text);
 	}
 
 
-	/* --- SIMPLE GETTER AND SETTER ---
-	-------------------------------- */
-	public function setCode($code) {
-		$this->code['value'] = $code;
+
+	// --- SIMPLE GETTER AND SETTER
+	// ===========================================================================
+	
+	/**
+	 * Gets or sets text for barcode.
+	 * 
+	 * @param  string [$code         = null] Text to set for barcode
+	 * 
+	 * @return string Text of barcode
+	 */
+	public function Code($code = null)
+	{
+		if ($code == null)
+			return $this->code['value'];
+		
+		$this->code['value'] = strval($code);
 		$this->generateData();
 	}
-
-	public function getCode() {
-		return $this->code['value'];
+	
+	/**
+	 * Gets or sets a value that indicates whether the text of the barcode should be printed or not.
+	 * 
+	 * @param  boolean [$flag  = null] Flag (true or false)
+	 * @return boolean Current state of the flag
+	 */
+	public function ShowCode($flag = null)
+	{
+		if ($flag == null)
+			return $this->flags['showCode'];
+		
+		if (!is_bool($flag))
+			throw new \InvalidArgumentException('Show text can only be enabled or disabled');
+		
+		$this->flags['showCode'] = $flag;
 	}
 
-	public function setShowCode($val) {
-		if ($val != true && $val != false)
-				throw new \Exception('show text can only be true or false');
-
-		$this->flags['showCode'] = $val;
+	/**
+	 * Gets or sets custom text above the barcode.
+	 * 
+	 * @param  string [$text  = null] Custom text to be set
+	 * @return string Custom text currently set
+	 */
+	public function CustomText($text = null)
+	{
+		if ($text == null)
+			return $this->text;
+		
+		$this->text = trim($text);
+	}
+	
+	/**
+	 * Gets or sets a value that indicates whether the font should be resized or not.
+	 * 
+	 * @param  boolean [$flag  = null] Flag (true or false)
+	 * @return boolean Current state of the flag
+	 */
+	public function FontResize($flag = null)
+	{
+		if ($flag == null)
+			return $this->flags['fontResize'];
+		
+		if (!is_bool($flag))
+			throw new \InvalidArgumentException('Font resize can only be enabeld or disabled');
+		
+		$this->flags['fontResize'] = $flag;
+	}
+	
+	/**
+	 * Gets or sets the line width
+	 * 
+	 * @param  integer [$px  = null] Line width in px
+	 * @return integer Current line width
+	 */
+	public function LineWidth($px = null)
+	{
+		if ($px == null)
+			return $this->dims['px_width'];
+		
+		if (intval($px) < 1)
+			throw new \InvalidArgumentException('Line with should be one or more');
+		
+		$this->dims['px_width'] = intval($px);
+		$this->Width($this->calcWidth());
+	}
+	
+	/**
+	 * Gets or sets the space to the borders
+	 * 
+	 * @param  integer [$px  = null] Border spacing in px
+	 * @return integer Current spacing
+	 */
+	public function BorderSpacing($px = null)
+	{
+		if ($px == null)
+			return $this->dims['b_spacing'];
+		
+		if (intval($px) < 0)
+			throw new \InvalidArgumentException('Border spacing should be zero or more');
+		
+		$this->dims['b_spacing'] = intval($px);
+		$this->Width($this->calcWidth());
 	}
 
-	public function getShowCode() {
-		return $this->flags['showCode'];
+	/**
+	 * Gets or sets the border width
+	 * 
+	 * @param  integer [$px         = null] Width of border in px
+	 * @return integer Current border width
+	 */
+	public function BorderWidth($px = null)
+	{
+		if ($px == null)
+			return $this->dims['b_width'];
+		
+		if (intval($px) < 0)
+			throw new \InvalidArgumentException('Border width should be zero or more');
+		
+		$this->dims['b_width'] = intval($px);
+		$this->Width($this->calcWidth());
 	}
 
-	public function setCustomText($val) {
-		$this->text = trim($val);
+	/**
+	 * Gets or sets the space between text letters
+	 * 
+	 * @param  integer [$px  = null] Letter spacing in px
+	 * @return integer current value
+	 */
+	public function TextSpacing($px = null)
+	{
+		if ($px == null)
+			return $this->dims['txt_spacing'];
+		
+		if (intval($px) < 0)
+			throw new \InvalidArgumentException('Text spacing should be zero or more');
+		
+		$this->dims['txt_spacing'] = intval($px);
 	}
-
-	public function getCustomText() {
-		return $this->text;
-	}
-
-	public function setFontResize($val) {
-		if ($val != true && $val != false)
-				throw new \Exception('font resize can only be true or false');
-
-		$this->flags['fontResize'] = $val;
-	}
-
-	public function getFontResize() {
-		return $this->flags['fontResize'];
-	}
-
-	public function setLineWidth($px) {
-		if ($px < 1)
-				throw new \Exception('line width less or equal zero');
-
-		$this->dims['px_width'] = $px;
-		$this->setWidth($this->calcWidth());
-	}
-
-	public function getLineWidth() {
-		return $this->dims['px_width'];
-	}
-
-	public function setBorderSpacing($px) {
-		if ($px < 0)
-				throw new \Exception('border spacing less than zero');
-
-		$this->dims['b_spacing'] = $px;
-		$this->setWidth($this->calcWidth());
-	}
-
-	public function getBorderSpacing() {
-		return $this->dims['b_spacing'];
-	}
-
-	public function setBorderWidth($px) {
-		if ($px < 0)
-				throw new \Exception('border width less than zero');
-
-		$this->dims['b_width'] = $px;
-		$this->setWidth($this->calcWidth());
-	}
-
-	public function getBorderWidth() {
-		return $this->dims['b_width'];
-	}
-
-	public function setTextSpacing($px) {
-		if ($px < 0)
-				throw new \Exception('text spacing less than zero');
-
-		$this->dims['txt_spacing'] = $px;
-	}
-
-	public function getTextSpacing() {
-		return $this->dims['txt_spacing'];
-	}
-
-	public function addFont($font, $fontSize) {
+	
+	/**
+	 * Add font with specific size
+	 * 
+	 * @param string  $font     Path to font-file
+	 * @param integer $fontSize Size of font
+	 * 
+	 * @return void
+	 */
+	public function addFont($font, $fontSize)
+	{
 		$this->setFont($font);
 		$this->initFontSize($fontSize);
 	}
 
-	private function setFont($font) {
+	/**
+	 * Sets path to font
+	 * 
+	 * @param string $font Path to font
+	 * 
+	 * @return void
+	 */
+	private function setFont($font)
+	{
 		if (!file_exists($font))
 				throw new \Exception('font does not exists');
 
 		$this->font = $font;
 	}
-
-	private function initFontSize($size) {
-		if ($size < 1)
+	
+	/**
+	 * Initializes size of font
+	 * 
+	 * @param integer $size Size of font
+	 * 
+	 * @return void
+	 */
+	private function initFontSize($size)
+	{
+		if (intval($size) < 1)
 				throw new \Exception('font size less or equal zero');
 
-		$this->fontSize = $size;
-		$this->calcFontSize = $size;
+		$this->fontSize = intval($size);
+		$this->calcFontSize = intval($size);
 	}
 
-	public function getFont() {
+	/**
+	 * Gets path of font if set
+	 * 
+	 * @return mixed Path to font or null
+	 */
+	public function getFont()
+	{
 		return $this->font;
 	}
-
-	private function setFontSize($px) {
-		$this->calcFontSize = $px;
+	
+	/**
+	 * Gets or sets fontsize
+	 * 
+	 * @param  integer [$px  = null] Fontsize on barcode
+	 * 
+	 * @return integer Current fontsize
+	 */
+	public function FontSize($px = null)
+	{
+		if ($px == null)
+			return $this->calcFontSize;
+		
+		$this->calcFontSize = intval($px);
 	}
 
-	public function getFontSize() {
-		return $this->calcFontSize;
-	}
-
-
-	/* --- IMAGE DIMENSIONS ---
-	------------------------ */
-	private function setHeight($px) {
+	// --- IMAGE DIMENSIONS
+	// ===========================================================================
+	
+	/**
+	 * Gets or sets height of image
+	 * 
+	 * @param  integer [$px  = null] Height of image in px
+	 * @return integer Current height in px
+	 */
+	public function Height($px = null)
+	{
+		if ($px == null)
+			return $this->dims['height'];
+		
+		$px = intval($px);
+		
+		if ($px <= 0)
+			throw new \InvalidArgumentException('Height should be greater than zero');
+		
 		$this->dims['height'] = $px;
 	}
+	
+	/**
+	 * Gets or sets (internal) width of image
+	 * 
+	 * @param  integer [$px  = null] Width of image in px
+	 * @return integer Current width in px
+	 */
+	public function Width($px = null)
+	{
+		if ($px == null)
+			return $this->dims['width'];
 
-	public function getHeight() {
-		return $this->dims['height'];
-	}
+		$trace = debug_backtrace();
 
-	private function setWidth($px) {
-		$this->dims['width'] = $px;
-		if ($this->font != false) {
-			if ($this->getFontResize()) {
-				$width = $this->getWidth() - ($this->getBorderWidth() + $this->getBorderSpacing() + $this->getTextSpacing() * 2);
-				$this->setFontSize($this->calcFontSize($width));
-			} else {
-				$this->bboxCode = $this->calcTTFBBox($this->getFontSize(), $this->getFont(), $this->getCode());
+		if (!isset($trace[1]['class']) || $trace[1]['class'] != __CLASS__)
+			throw new \BadMethodCallException('Set width only internal allowed');
+			
+		$this->dims['width'] = intval($px);
+		
+		if ($this->font != false)
+		{
+			if ($this->FontResize())
+			{
+				$width = $this->Width() - ($this->BorderWidth() + $this->BorderSpacing() + $this->TextSpacing() * 2);
+				$this->FontSize($this->calcFontSize($width));
+			}
+			else
+			{
+				$this->bboxCode = $this->calcTTFBBox($this->FontSize(), $this->getFont(), $this->Code());
 			}
 			$this->bboxText = $this->calcTTFBBox($this->fontSize, $this->getFont(), $this->text);
 		}
 	}
 
-	public function getWidth() {
-		return $this->dims['width'];
-	}
 
-
-	/* --- CALCULATIONS ---
-	-------------------- */
-	private function calcWidth() {
+	// --- CALCULATIONS
+	// ===========================================================================
+	
+	/**
+	 * Calculate width of the image
+	 * 
+	 * @return integer Width in px
+	 */
+	private function calcWidth()
+	{
 		$len = strlen($this->encoding['value']);
-		$px  = $this->getLineWidth();
-		$b   = $this->getBorderWidth();
-		$sp  = $this->getBorderSpacing();
+		$px  = $this->LineWidth();
+		$b   = $this->BorderWidth();
+		$sp  = $this->BorderSpacing();
 
 		return ($len * $px + ($b + $sp) * 2);
 	}
 
-	private function calcFontSize($width) {
+	/**
+	 * Calculate fontsize that fits in the space
+	 * 
+	 * @param  integer $width Width of space available
+	 * 
+	 * @return integer Fontsize that is possible
+	 */
+	private function calcFontSize($width)
+	{
 		$i = 1; $run = true;
-		while ($run) {
-			$bbox = $this->calcTTFBBox($i, $this->getFont(), $this->getCode());
-			if ($bboxCode['width'] < $width) {
+		while ($run) 
+		{
+			$bbox = $this->calcTTFBBox($i, $this->getFont(), $this->Code());
+			if ($bboxCode['width'] < $width)
+			{
 				$i++;
-			} else {
+			}
+			else
+			{
 				$i--;
-				$bbox = $this->calcTTFBBox($i, $this->getFont(), $this->getCode());
+				$bbox = $this->calcTTFBBox($i, $this->getFont(), $this->Code());
 				$run = false;
 			}
 		}
@@ -441,56 +726,89 @@ class BarCode128 {
 		return $i;
 	}
 
-	private function calcTTFBBox($fontSize, $font, $text) {
+	/**
+	 * Calculate font box
+	 * 
+	 * @param  integer $fontSize Size of font
+	 * @param  string  $font     Path to font
+	 * @param  string  $text     Text to print
+	 * 
+	 * @return object  Calculated border-box for text
+	 */
+	private function calcTTFBBox($fontSize, $font, $text)
+	{
 		$bbox = imagettfbbox($fontSize, 0, $font, $text);
-		if($bbox[0] >= -1) {
+		if($bbox[0] >= -1)
+		{
 			$bbox['x'] = abs($bbox[0] + 1) * -1;
-		} else {
+		}
+		else
+		{
 			$bbox['x'] = abs($bbox[0] + 2);
 		}
+		
 		$bbox['width'] = abs($bbox[2] - $bbox[0]);
-		if($bbox[0] < -1) {
+		if($bbox[0] < -1)
+		{
 			$bbox['width'] = abs($bbox[2]) + abs($bbox[0]) - 1;
 		}
+		
 		$bbox['y'] = abs($bbox[5] + 1);
 		$bbox['height'] = abs($bbox[7]) - abs($bbox[1]);
-		if($bbox[3] > 0) {
+		if($bbox[3] > 0)
+		{
 			$bbox['height'] = abs($bbox[7] - $bbox[1]) - 1;
 		}
+		
 		return $bbox;
 	}
 
 
-	/* --- DATA FOR ENCODING ---
-	------------------------- */
-	private function generateData() {
-		$code = $this->getCode();
+	// --- DATA FOR ENCODING
+	// ===========================================================================
+	
+	/**
+	 * Generates ones and zeros for the barcode itself
+	 * 
+	 * @return void
+	 */
+	private function generateData()
+	{
+		$code = $this->Code();
 		$data = array();
-		for ($i = 0; $i < strlen($code); $i++) {
-			if ($i == strlen($code)-1) {
+		for ($i = 0; $i < strlen($code); $i++)
+		{
+			if ($i == (strlen($code) - 1))
+			{
 				// last char
 				$val = $code{$i};
 				$data[] = $this->replaceSpecialChars($val);
-			} else {
-				if (is_numeric($code{$i}) && is_numeric($code{$i+1})) {
+			}
+			else
+			{
+				if (is_numeric($code{$i}) && is_numeric($code{$i+1}))
+				{
 					$data[] = $code{$i}.$code{$i+1};
 					$i++;
-				} else {
+				}
+				else
+				{
 					$val = $code{$i};
 					$data[] = $this->replaceSpecialChars($val);
 				}
 			}
 		}
+		
 		$this->code['data'] = $data;
 
 		if (isset($data[0]))
 				$this->setStartSet($this->getCharSet($data[0]));
 
-		for ($i = 0; $i < count($data); ++$i) {
+		for ($i = 0; $i < count($data); ++$i)
+		{
 			$set = $this->getCharSet($data[$i]);
-			if ($set != $this->curSet) {
+			if ($set != $this->curSet)
 				$this->changeSet($set);
-			}
 
 			$val = $this->getCharVal($set, $data[$i]);
 			$this->addChecksum($val);
@@ -502,91 +820,156 @@ class BarCode128 {
 		$this->addEncoding(106);
 	}
 
-	private function replaceSpecialChars($val) {
-		switch ($val) {
-			case ' ': return 'SP';
+	/**
+	 * Replace special chars from code
+	 * 
+	 * @param  string $val Char itself
+	 * 
+	 * @return string Corresponding replacement
+	 */
+	private function replaceSpecialChars($val)
+	{
+		switch ($val)
+		{
+			case ' ':  return 'SP';
 			case "\t": return 'HT';
 			case "\f": return 'FF';
-			default: return $val;
+			default:   return $val;
 		}
 	}
 
-	private function getCharVal($set, $char) {
+	/**
+	 * Get value for char in charset
+	 * 
+	 * @param  string  $set  Characterset
+	 * @param  string  $char Char to get value for
+	 * 
+	 * @return integer Value for char in charset
+	 */
+	private function getCharVal($set, $char)
+	{
 		return $this->set[$set][$char];
 	}
 
-	private function changeSet($set) {
+	/**
+	 * Change to another characterset
+	 * 
+	 * @param string $set New characterset
+	 * 
+	 * @return void
+	 */
+	private function changeSet($set)
+	{
 		$this->curSet = $set;
-		switch ($set) {
-		case 'A':
-			$this->addChecksum('101');
-			$this->addEncoding('101');
-			break;
-		case 'B':
-			$this->addChecksum('100');
-			$this->addEncoding('100');
-			break;
-		case 'C':
-			$this->addChecksum('99');
-			$this->addEncoding('99');
-			break;
+		switch ($set)
+		{
+			case 'A':
+				$this->addChecksum('101');
+				$this->addEncoding('101');
+				break;
+			case 'B':
+				$this->addChecksum('100');
+				$this->addEncoding('100');
+				break;
+			case 'C':
+				$this->addChecksum('99');
+				$this->addEncoding('99');
+				break;
 		}
 	}
 
-	private function getCharSet($char) {
+	/**
+	 * Get possible charset for character
+	 * 
+	 * @param  string $char Character
+	 * 
+	 * @return string Best characterset for char
+	 */
+	private function getCharSet($char)
+	{
 		$set = $this->set;
 		$curSet = $this->curSet;
 		$sets = array('A', 'B', 'C');
 
-		if (!empty($curSet)) {
-			if (array_key_exists($char, $set[$curSet])) {
+		if (!empty($curSet))
+		{
+			if (array_key_exists($char, $set[$curSet]))
 				return $curSet;
-			}
+
 			$index = array_search($curSet, $sets);
 			unset($sets[$index]);
 			sort($sets);
 		}
 
-		for ($i = 0; $i < count($sets); ++$i) {
-			if (array_key_exists($char, $set[$sets[$i]])) {
+		for ($i = 0; $i < count($sets); ++$i)
+		{
+			if (array_key_exists($char, $set[$sets[$i]]))
 				return $sets[$i];
-			}
 		}
 	}
 
-	private function setStartSet($set) {
+	/**
+	 * Set starting characterset
+	 * 
+	 * @param string $set Characterset
+	 * 
+	 * @return void
+	 */
+	private function setStartSet($set)
+	{
 		$this->curSet = $set;
-		switch ($set) {
-		case 'A':
-			$this->addChecksum('103');
-			$this->addEncoding('103');
-			break;
-		case 'B':
-			$this->addChecksum('104');
-			$this->addEncoding('104');
-			break;
-		case 'C':
-			$this->addChecksum('105');
-			$this->addEncoding('105');
-			break;
+		switch ($set)
+		{
+			case 'A':
+				$this->addChecksum('103');
+				$this->addEncoding('103');
+				break;
+			case 'B':
+				$this->addChecksum('104');
+				$this->addEncoding('104');
+				break;
+			case 'C':
+				$this->addChecksum('105');
+				$this->addEncoding('105');
+				break;
 		}
 	}
 
-	private function addChecksum($val) {
+	/**
+	 * Adding checksum to binary code
+	 * 
+	 * @param integer $val Checksum
+	 * 
+	 * @return void
+	 */
+	private function addChecksum($val)
+	{
 		$chk = $this->checksum;
 		$count = count($chk['data']);
 
-		if ($count == 0) {
+		if ($count == 0)
+		{
 			$chk['data'][] = $val;
-		} else {
+		}
+		else
+		{
 			$chk['data'][] = ($val * $count);
 		}
+		
 		$chk['value'] = array_sum($chk['data']);
 
 		$this->checksum = $chk;
 	}
 
-	private function addEncoding($val) {
+	/**
+	 * Adding encoding
+	 * 
+	 * @param string $val Encoding
+	 * 
+	 * @return void
+	 */
+	private function addEncoding($val)
+	{
 		$enc = $this->encoding;
 
 		$enc['data'][] = $val;
@@ -595,13 +978,26 @@ class BarCode128 {
 
 		$this->encoding = $enc;
 	}
-
-
-	public function getVal($val) {
+	
+	/**
+	 * Return value of specific count
+	 * 
+	 * @param  integer $val Number of position
+	 * 
+	 * @return string  Value at position
+	 */
+	public function getVal($val)
+	{
 		return $this->vals[$val];
 	}
 
-	private function setCodecSet() {
+	/**
+	 * Set characterset
+	 * 
+	 * @return void
+	 */
+	private function setCodecSet()
+	{
 		$set = array(); $vals = array();
 
 		$set['A']['SP']     = '0';

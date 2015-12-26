@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__."/barcode.class.php";
+require_once __DIR__.'/src/Barcode128.class.php';
 
 // Text to be converted
 $code = 'http://am-wd.de';
@@ -10,7 +10,7 @@ $text = 'BarCode128';
 
 // A font file located in the same directory
 // http://openfontlibrary.org/en/font/hans-kendrick
-$font = __DIR__."/HansKendrick-Regular.ttf";
+$font = __DIR__."/data/HansKendrick-Regular.ttf";
 // corresponding fontsize in px
 $fontSize = 12;
 
@@ -25,13 +25,14 @@ $barcode = new AMWD\BarCode128($code, $height);
 $barcode->addFont($font, $fontSize);
 
 // OPTIONAL: add the text above the barcode
-$barcode->setCustomText($text);
+$barcode->CustomText($text);
 
 /*
  * with $barcode->draw() the raw image will be echoed to the stdout
  * with $barcode->save('barcode.jpg') the image will be saved as jpg
  **/
 
-$barcode->save('barcode.gif');
+$barcode->draw();
+//$barcode->save('data/barcode.gif');
 
 ?>

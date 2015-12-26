@@ -15,7 +15,7 @@ The basic code isn't that much...
 ```php
 <?php
 // get the class
-require_once __DIR__."/barcode.class.php";
+require_once __DIR__.'/src/Barcode128.class.php';
 
 // Text to be converted
 $code = 'http://am-wd.de';
@@ -24,7 +24,9 @@ $code = 'http://am-wd.de';
 $text = 'BarCode128';
 
 // A font file located in the same directory
-$font = __DIR__."/HansKendrick-Regular.ttf";
+// http://openfontlibrary.org/en/font/hans-kendrick
+$font = __DIR__."/data/HansKendrick-Regular.ttf";
+
 // corresponding fontsize in px
 $fontSize = 12;
 
@@ -32,22 +34,26 @@ $fontSize = 12;
 $height = 130;
 
 // create an Object of BarCode128 Class
-$barcode = new BarCode128($code, $height);
+$barcode = new AMWD\BarCode128($code, $height);
 
 // OPTIONAL: add the font
-// if not: text can't be written (only bars)
+// if not: no Text can be written (only bars)
 $barcode->addFont($font, $fontSize);
 
 // OPTIONAL: add the text above the barcode
-$barcode->setCustomText($text);
+$barcode->CustomText($text);
 
-$barcode->save('barcode.gif');
+// Save the file to disk
+$barcode->save('data/barcode.gif');
+
+// OR: Draw the image to stdout
+//$barcode->draw();
 ?>
 ```
 
 **Result:**
 
-![image](barcode.gif)
+![Result Image](data/barcode.gif)
 
 -----
 
@@ -57,7 +63,7 @@ $barcode->save('barcode.gif');
 
 You have the ability to print a custom text above the barcode
 
-`$barcode->setCustomText($text)`
+`$barcode->CustomText($text)`
 
 `$text` is your custom text. If empty: no text will be displayed.
 
@@ -65,13 +71,13 @@ You have the ability to print a custom text above the barcode
 
 The barcode can be framed. So you can easily print and cut it out.
 
-`$barcode->setBorderWidth($value);`
+`$barcode->BorderWidth($value);`
 
 `$value` is the size in Pixel. Zero means: no Frame. **Default:** 2
 
 You can adjust the spacing between border and text/barcode
 
-`$barcode->setBorderSpacing($value);`
+`$barcode->BorderSpacing($value);`
 
 `$value` is the spacing in Pixel. **Default:** 10
 
@@ -79,7 +85,7 @@ You can adjust the spacing between border and text/barcode
 
 The thickness of an bar can be adjusted, due to printers, with an lower resolution.
 
-`$barcode->setLineWidth($value)`
+`$barcode->LineWidth($value)`
 
 `$value` is the thickness in Pixel. **Default:** 1
 
@@ -87,7 +93,7 @@ The thickness of an bar can be adjusted, due to printers, with an lower resoluti
 
 In images text spacing is important! If you choose a font, the info, how a character is "build", is saved as vector. While the image is created these infos will be converted into pixel information and sometimes the spacing will be to small to read the text aferwards.
 
-`$barcode->setTextSpacing($value)`
+`$barcode->TextSpacing($value)`
 
 `$value` is the spacing in Pixel. **Default:** 5
 
@@ -95,7 +101,7 @@ In images text spacing is important! If you choose a font, the info, how a chara
 
 If you want to see your encoded text below the barcode you just need to set the value
 
-`$barcode->setShowCode($value)`
+`$barcode->ShowCode($value)`
 
 `$value` is the switch and can be `true` or `false`. **Default:** true
 
@@ -104,7 +110,7 @@ If you want to see your encoded text below the barcode you just need to set the 
 The text above the barcode (custom text) will always be in the font size you define at the beginning.
 If you want the printed code to be resized, set the flag:
 
-`$barcode->setFontResize($value)`
+`$barcode->FontResize($value)`
 
 `$value` is the switch and can be `true` or `false`. **Default:** false
 
