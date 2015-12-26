@@ -8,6 +8,10 @@
 
 namespace AMWD;
 
+/* ---                     DEPENDENCIES                          ---
+----------------------------------------------------------------- */
+function_exists('imagecreatetruecolor') || die('GD Library needed');
+
 /**
  * Class to generate Barcodes with Code128
  *
@@ -18,11 +22,6 @@ namespace AMWD;
  * @link       https://bitbucket.org/BlackyPanther/barcodes-128
  * @version    v1.0-20151222 | stable; no testcases
  */
-
-/* ---                     DEPENDENCIES                          ---
------------------------------------------------------------------ */
-function_exists('imagecreatetruecolor') || die('GD Library needed');
-
 class BarCode128
 {
 	/**
