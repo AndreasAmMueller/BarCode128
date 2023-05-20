@@ -16,9 +16,10 @@ $fontSize = 12;
 
 // height of the barcode in px
 $height = 130;
+$height = 260;
 
 // create an Object of BarCode128 Class
-$barcode = new AMWD\BarCode128($code, $height);
+$barcode = new AMWD\BarCode128($code, $width, $height);
 
 // OPTIONAL: add the font
 // if not: no Text can be written (only bars)
