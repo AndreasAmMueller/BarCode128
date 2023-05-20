@@ -18,7 +18,7 @@ The basic code isn't that much...
 require_once __DIR__.'/src/Barcode128.class.php';
 
 // Text to be converted
-$code = 'http://am-wd.de';
+$code = 'https://github.com/Tomirad/BarCode128';
 
 // Text printed above the barcode
 $text = 'BarCode128';
@@ -32,9 +32,10 @@ $fontSize = 12;
 
 // height of the barcode in px
 $height = 130;
+$width = 260;
 
 // create an Object of BarCode128 Class
-$barcode = new AMWD\BarCode128($code, $height);
+$barcode = new AMWD\BarCode128($code, $width, $height);
 
 // OPTIONAL: add the font
 // if not: no Text can be written (only bars)
@@ -159,8 +160,6 @@ If an unknown extension is used the barcode image will choose *png* encoding.
 
 - PHP >= 5.3.10
 - GD Version 2.0
-- Apple MacBook Pro 15-inch (Late 2011)
-- Raspberry Pi Typ B (as server)
 
 ## Bugs / Issues
 
